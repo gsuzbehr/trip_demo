@@ -3,7 +3,7 @@ const Alexa = require('ask-sdk-core');
 // 1. Text strings ================================================================================
 //    Modify these strings and messages to change the behavior of your Lambda function
 
-const welcomeOutput = "Let's plan a trip. Where would you like to go?";
+const welcomeOutput = "Welcome to Paint Cast by Behr.  I can help you with your project.  Where city do you live in?";
 const welcomeReprompt = "Let me know where you'd like to go or when you'd like to go on your trip";
 const helpOutput = 'You can demonstrate the delegate directive by saying "plan a trip".';
 const helpReprompt = 'Try saying "plan a trip".';
@@ -46,6 +46,7 @@ const InProgressPlanMyTripHandler = {
 
 const CompletedPlanMyTripHandler = {
   canHandle(handlerInput) {
+    console.log("CompletedPlanMyTripHandler 1");
     const request = handlerInput.requestEnvelope.request;
     return request.type === 'IntentRequest' && request.intent.name === 'PlanMyTripIntent';
   },
@@ -55,24 +56,30 @@ const CompletedPlanMyTripHandler = {
     const responseBuilder = handlerInput.responseBuilder;
     const filledSlots = handlerInput.requestEnvelope.request.intent.slots;
     const slotValues = getSlotValues(filledSlots);
+    console.log("CompletedPlanMyTripHandler 2");
 
     // compose speechOutput that simply reads all the collected slot values
     let speechOutput = getRandomPhrase(tripIntro);
+    console.log("CompletedPlanMyTripHandler 3");
 
     // activity is optional so we'll add it to the output
     // only when we have a valid activity
-    if (slotValues.travelMode) {
-      speechOutput += slotValues.travelMode;
-    } else {
-      speechOutput += "You'll go ";
-    }
+    //if (slotValues.travelMode) {
+      console.log("CompletedPlanMyTripHandler 4");
+    //  speechOutput += slotValues.travelMode;
+    //} else {
+    //  console.log("CompletedPlanMyTripHandler 5");
+    //  speechOutput += "You'll go ";
+    //}
 
     // Now let's recap the trip
-    speechOutput = `${speechOutput} from ${slotValues.fromCity.synonym} to ${slotValues.toCity.synonym} on ${slotValues.travelDate.synonym}`;
+    speechOutput = `${speechOutput} from ${slotValues.toCity.synonym} on ${slotValues.travelDate.synonym}`;
 
-    if (slotValues.activity.synonym) {
-      speechOutput += ` to go ${slotValues.activity.synonym}.`;
-    }
+    console.log("CompletedPlanMyTripHandler 5");
+
+    //if (slotValues.activity.synonym) {
+    //  speechOutput += ` to go ${slotValues.activity.synonym}.`;
+    //}
 
     return responseBuilder
       .speak(speechOutput)
