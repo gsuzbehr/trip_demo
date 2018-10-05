@@ -50,7 +50,7 @@ const CompletedPlanMyTripHandler = {
     const request = handlerInput.requestEnvelope.request;
     return request.type === 'IntentRequest' && request.intent.name === 'PlanMyTripIntent';
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
     console.log('Plan My Trip - handle');
 
     const responseBuilder = handlerInput.responseBuilder;
@@ -58,31 +58,86 @@ const CompletedPlanMyTripHandler = {
     const slotValues = getSlotValues(filledSlots);
     console.log("CompletedPlanMyTripHandler 2");
 
+
+    const cityName = slotValues.toCity.synonym;
+    const startDate = slotValues.travelDate.synonym;
+    const selectedProject = slotValues.projectType.synonym;
+
+    let weatherAPIUrl = `http://api.openweathermap.org/data/2.5/forecast?appid=c5c5f37bd77009ef9dd19707a10277f1&units=imperial&CNT=5&q=${cityName},us`;
+    let currentTemperature = '';
+    let outputSpeech = '';
+  
+
+    console.log("cityName: " + cityName);
+    console.log("startDate: " + startDate);
+    console.log("selectedProject: " + selectedProject);
+    console.log("weatherAPIUrl: " + weatherAPIUrl);
+
+
+
+
+
+
+
+
+    await getRemoteData(weatherAPIUrl).then((response) => {
+      const data = JSON.parse(response);
+
+      let cityName = data.city.name;
+      let day1 = '';
+      let day2 = '';
+      let day3 = '';
+      let day4 = '';
+      let day5 = '';
+
+      currentTemperature = data.list[0].main.temp;
+
+
+      //outputSpeech = "Today is : " + currentDay + ".  Your city is " + cityName;
+      console.log("CompletedPlanMyTripHandler 3");
+      console.log("data: " + data);
+      console.log("data.list[0].main.temp: " + data.list[0].main.temp);
+
+      if ((data.list[0].main.temp > 50) || (data.list[0].main.temp > 90)) {
+        console.log("CompletedPlanMyTripHandler 4");
+        outputSpeech = `You live in ${cityName} and the current temperature is ${currentTemperature} degrees fahrenheit.  Congratulations, you can paint today!`;
+      } else {
+        console.log("CompletedPlanMyTripHandler 5");
+        outputSpeech = `Sorry.  It is ${currentTemperature} degrees fahrenheit and it is not a great time to paint.`
+      }
+
+    })
+    .catch((err) => {
+      //set an optional error message here
+      //outputSpeech = err.message;
+    });
+
+
+
+
+
+
+
+
+
+
+
+
     // compose speechOutput that simply reads all the collected slot values
     let speechOutput = getRandomPhrase(tripIntro);
-    console.log("CompletedPlanMyTripHandler 3");
+    console.log("CompletedPlanMyTripHandler 6");
 
-    // activity is optional so we'll add it to the output
-    // only when we have a valid activity
-    //if (slotValues.travelMode) {
-      console.log("CompletedPlanMyTripHandler 4");
-    //  speechOutput += slotValues.travelMode;
-    //} else {
-    //  console.log("CompletedPlanMyTripHandler 5");
-    //  speechOutput += "You'll go ";
-    //}
+
+
+
+
+
 
     // Now let's recap the trip
     speechOutput = `${speechOutput} from ${slotValues.toCity.synonym} on ${slotValues.travelDate.synonym}`;
 
-    console.log("CompletedPlanMyTripHandler 5");
-
-    //if (slotValues.activity.synonym) {
-    //  speechOutput += ` to go ${slotValues.activity.synonym}.`;
-    //}
-
     return responseBuilder
-      .speak(speechOutput)
+      .speak(outputSpeech)
       .getResponse();
   },
 };
@@ -195,6 +250,21 @@ function getRandomPhrase(array) {
   const i = Math.floor(Math.random() * array.length);
   return (array[i]);
 }
+
+const getRemoteData = function (url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? require('https') : require('http');
+    const request = client.get(url, (response) => {
+      if (response.statusCode < 200 || response.statusCode > 299) {
+        reject(new Error('Failed with status code: ' + response.statusCode));
+      }
+      const body = [];
+      response.on('data', (chunk) => body.push(chunk));
+      response.on('end', () => resolve(body.join('')));
+    });
+    request.on('error', (err) => reject(err))
+  })
+};
 
 // 4. Exports handler function and setup ===================================================
 const skillBuilder = Alexa.SkillBuilders.custom();
