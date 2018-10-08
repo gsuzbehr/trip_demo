@@ -3,10 +3,10 @@ const Alexa = require('ask-sdk-core');
 // 1. Text strings ================================================================================
 //    Modify these strings and messages to change the behavior of your Lambda function
 
-const welcomeOutput = "Welcome to Paint Cast by Behr.  I can help you with your project.  Where city do you live in?";
-const welcomeReprompt = "Let me know where you'd like to go or when you'd like to go on your trip";
-const helpOutput = 'You can demonstrate the delegate directive by saying "plan a trip".';
-const helpReprompt = 'Try saying "plan a trip".';
+const welcomeOutput = "Welcome to Paint Cast by Behr.  I can help you with your project.  What city do you live in?";
+const welcomeReprompt = "I can help you with your project.  What city do you live in?";
+const helpOutput = 'You can start by asking "is today a good day to start my project".';
+const helpReprompt = 'Try saying "is today a good day to start my project".';
 const tripIntro = [
   'This sounds like a cool trip. ',
   'This will be fun. ',
@@ -66,12 +66,21 @@ const CompletedPlanMyTripHandler = {
     let weatherAPIUrl = `http://api.openweathermap.org/data/2.5/forecast?appid=c5c5f37bd77009ef9dd19707a10277f1&units=imperial&CNT=5&q=${cityName},us`;
     let currentTemperature = '';
     let outputSpeech = '';
+    let minTemp = 40;
+    let maxTemp = 90;
+    let mainWeather = 'Clear';
+    var projectBoolean = 1;  //0 is false
+    var newDate = new Date();
+    var todaysDate = newDate.getDate();
   
 
     console.log("cityName: " + cityName);
     console.log("startDate: " + startDate);
+    console.log("day: " + startDate.substring(8, 10));
+    console.log("todays date: " + todaysDate);
     console.log("selectedProject: " + selectedProject);
     console.log("weatherAPIUrl: " + weatherAPIUrl);
+    console.log("project boolean: " + Boolean(projectBoolean));
 
 
 
@@ -97,14 +106,39 @@ const CompletedPlanMyTripHandler = {
       console.log("CompletedPlanMyTripHandler 3");
       console.log("data: " + data);
       console.log("data.list[0].main.temp: " + data.list[0].main.temp);
+      console.log("data.list[0].weather[0].main: " + data.list[0].weather[0].main);
+      console.log("date: " + slotValues.travelDate.synonym);
 
-      if ((data.list[0].main.temp > 50) || (data.list[0].main.temp > 90)) {
-        console.log("CompletedPlanMyTripHandler 4");
-        outputSpeech = `You live in ${cityName} and the current temperature is ${currentTemperature} degrees fahrenheit.  Congratulations, you can paint today!`;
-      } else {
-        console.log("CompletedPlanMyTripHandler 5");
-        outputSpeech = `Sorry.  It is ${currentTemperature} degrees fahrenheit and it is not a great time to paint.`
+      mainWeather = data.list[0].weather[0].main;
+
+      if (mainWeather == 'Rain' || mainWeather == 'Snow' || mainWeather == 'Thunderstorm') {
+        console.log("we should not start the project");
+        projectBoolean = 0;
       }
+
+      if (selectedProject == 'stain') {
+        minTemp = 40;
+        maxTemp = 90;
+      } else {
+        minTemp = 50;
+        maxTemp = 90;
+      }
+
+
+      if (Boolean(projectBoolean)) {
+        if ((data.list[0].main.temp > minTemp) || (data.list[0].main.temp > maxTemp)) {
+          console.log("CompletedPlanMyTripHandler 4");
+          outputSpeech = `You live in ${cityName} and the current temperature is ${currentTemperature} degrees fahrenheit.  Congratulations, you can start your project!`;
+        } else {
+          console.log("CompletedPlanMyTripHandler 5");
+          outputSpeech = `Sorry.  It is ${currentTemperature} degrees fahrenheit and it is not a great time to paint.`
+        }
+      } else {
+
+        outputSpeech = `Sorry.  The forecast will be ${mainWeather}.  It is not a good time to start.`
+      }
+
+
 
     })
     .catch((err) => {
