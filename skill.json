@@ -2,14 +2,14 @@
     "manifest": {
       "publishingInformation": {
         "locales": {
-          "en-GB": {
+          "en-US": {
             "summary": "TODO: skill summary",
             "examplePhrases": [
               "TODO: Alexa open invocation name",
               "TOOD: example phrase 2",
               "TOOD: example phrase 3"
             ],
-            "name": "Plan my trip - demo",
+            "name": "Paint Cast by Behr",
             "description": "TODO: skill description"
           }
         },
